@@ -19,6 +19,7 @@ const firebaseConfig = {
 };
 
 const GROQ_API_KEY = "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";
+const MODEL = "llama-3.3-70b-versatile"
 
 // ─────────────────────────────────────────────
 // INIT
