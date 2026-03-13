@@ -18,8 +18,10 @@ const firebaseConfig = {
   measurementId: "G-6ZBRZ2X4CD"
 };
 
-const GROQ_API_KEY = "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";
-const MODEL = "llama-3.3-70b-versatile"
+const GROQ_API_KEY = "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";
+const MODEL_VENT     = "meta-llama/llama-4-scout-17b-16e-instruct";
+const MODEL_ARGUE    = "moonshotai/kimi-k2-instruct";
+const MODEL_FALLBACK = "llama-3.3-70b-versatile";
 
 // ─────────────────────────────────────────────
 // INIT
@@ -414,8 +416,10 @@ window.sendMsg = async () => {
   chatHist.push({ role: "user", content: text });
   const typ = appendTyping("chat-msgs");
   try {
+    const argueMode = chatMode === "argue" || chatMode === "argue-nsfw";
+    const model = argueMode ? MODEL_ARGUE : MODEL_VENT;
     const msgs  = [{ role: "system", content: buildSystem() }, ...chatHist.slice(-10)];
-    const reply = await groqMsgs(msgs, chatMode.includes("nsfw") ? 1.0 : 0.88, 380);
+    const reply = await groqMsgs(msgs, chatMode.includes("nsfw") ? 1.0 : 0.88, 380, model);
     typ.remove();
     appendMsg(reply, "epi", "chat-msgs");
     chatHist.push({ role: "assistant", content: reply });
@@ -870,19 +874,31 @@ function scheduleCompliment() {
 // ─────────────────────────────────────────────
 // GROQ HELPERS
 // ─────────────────────────────────────────────
-async function groq(prompt, temp = 0.85, maxTok = 280) {
-  return groqMsgs([{ role: "user", content: prompt }], temp, maxTok);
+async function groq(prompt, temp = 0.85, maxTok = 280, model = MODEL_VENT) {
+  return groqMsgs([{ role: "user", content: prompt }], temp, maxTok, model);
 }
 
-async function groqMsgs(messages, temp = 0.85, maxTok = 280) {
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type":"application/json", "Authorization":`Bearer ${GROQ_API_KEY}` },
-    body: JSON.stringify({ model: MODEL, messages, max_tokens: maxTok, temperature: temp })
-  });
-  const data = await res.json();
-  if (!data.choices?.[0]?.message?.content) throw new Error("no response");
-  return data.choices[0].message.content.trim();
+async function groqMsgs(messages, temp = 0.85, maxTok = 280, model = MODEL_VENT) {
+  const tryModel = async (m) => {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "Authorization":`Bearer ${GROQ_API_KEY}` },
+      body: JSON.stringify({ model: m, messages, max_tokens: maxTok, temperature: temp })
+    });
+    const data = await res.json();
+    if (res.status === 429) throw new Error("rate_limited");
+    if (!data.choices?.[0]?.message?.content) throw new Error("no response");
+    return data.choices[0].message.content.trim();
+  };
+  try {
+    return await tryModel(model);
+  } catch (e) {
+    if (model !== MODEL_FALLBACK) {
+      console.warn(`Model ${model} failed, falling back to ${MODEL_FALLBACK}`);
+      return await tryModel(MODEL_FALLBACK);
+    }
+    throw e;
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -906,3 +922,276 @@ function toast(msg) {
 // ─────────────────────────────────────────────
 initStars();
 initPetals();
+
+// ─────────────────────────────────────────────
+// CHINATSU — cycle mentor bot
+// ─────────────────────────────────────────────
+let chiHist = [];
+
+function chiSystem() {
+  const phases = uData.phases || { mens: 5, foll: 8, ov: 3 };
+  return `You are Chinatsu, a warm and knowledgeable female cycle health mentor inside Bloom — a women's wellness app.
+
+YOUR PERSONALITY:
+- Friendly, calm, knowledgeable — like a kind older sister who studied health science
+- Warm English with occasional gentle tone, never cold or clinical
+- You explain things clearly without being preachy
+- You validate irregular cycles, pain, mood swings as NORMAL
+- Never give medical diagnoses. Always suggest seeing a doctor for serious concerns.
+- Keep responses conversational — no bullet lists, just talk
+
+ABOUT THE USER:
+- Name: ${uData.name || "her"}
+- Cycle: Day ${cycleInfo.day || "?"} of ${uData.cycleLength || 28}-day cycle
+- Phase: ${cycleInfo.phaseName || "unknown"}
+- Phase lengths: Womenstrual ${phases.mens} days, Follicular ${phases.foll} days, Ovulation ${phases.ov} days
+- Irregular cycles: completely normal and supported here
+
+SHARED MEMORY (from Epipen conversations):
+${memory || "No shared memory yet."}
+
+RULES:
+- Say "Womenstrual" not "menstrual"
+- No bullet points
+- Keep responses 2-4 sentences unless asking for detailed tips
+- Sound like a knowledgeable friend, not a medical textbook`;
+}
+
+window.toggleChiChat = () => {
+  const c = document.getElementById("chi-chat");
+  const open = c.style.display === "none";
+  c.style.display = open ? "block" : "none";
+  if (open && !document.getElementById("chi-msgs").children.length) {
+    appendChiMsg("Hi! I'm Chinatsu 🌿 Ask me anything about your cycle — phases, symptoms, what's normal, what to eat, anything.", "bot");
+  }
+};
+
+window.sendChi = async () => {
+  const inp  = document.getElementById("chi-in");
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = "";
+  appendChiMsg(text, "user");
+  chiHist.push({ role: "user", content: text });
+  const typ = appendChiTyping();
+  try {
+    const msgs  = [{ role: "system", content: chiSystem() }, ...chiHist.slice(-8)];
+    const reply = await groqMsgs(msgs, 0.82, 320, MODEL_VENT);
+    typ.remove();
+    appendChiMsg(reply, "bot");
+    chiHist.push({ role: "assistant", content: reply });
+  } catch { typ.remove(); appendChiMsg("Something went wrong — try again? 🌿", "bot"); }
+};
+
+function appendChiMsg(text, who) {
+  const c   = document.getElementById("chi-msgs");
+  const div = document.createElement("div");
+  div.className   = `chi-msg ${who === "user" ? "chi-user-msg" : "chi-bot-msg"}`;
+  div.textContent = text;
+  c.appendChild(div);
+  c.scrollTop = c.scrollHeight;
+}
+
+function appendChiTyping() {
+  const c   = document.getElementById("chi-msgs");
+  const div = document.createElement("div");
+  div.className = "chi-msg chi-bot-msg typing";
+  div.innerHTML = '<div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div>';
+  c.appendChild(div);
+  c.scrollTop = c.scrollHeight;
+  return div;
+}
+
+// ─────────────────────────────────────────────
+// CYCLE PAGE LOGIC
+// ─────────────────────────────────────────────
+function setupPeriodPage() {
+  computeCycleFull();
+  loadChiTip();
+  loadSymHistory();
+  loadForecast(document.querySelector(".fc-tab.active") || document.querySelector(".fc-tab"), "mood");
+}
+
+function computeCycleFull() {
+  if (!uData.cycleStart) return;
+  const phases  = uData.phases || { mens: 5, foll: 8, ov: 3 };
+  const start   = new Date(uData.cycleStart);
+  const today   = new Date();
+  const len     = uData.cycleLength || 28;
+  const diff    = Math.floor((today - start) / 86400000);
+  const day     = (diff % len) + 1;
+
+  // phase detection based on custom phase lengths
+  const mensEnd = phases.mens;
+  const follEnd = mensEnd + phases.foll;
+  const ovEnd   = follEnd + phases.ov;
+  let phase, phaseName, emoji;
+  if (day <= mensEnd)      { phase = "menstrual";  phaseName = "Womenstrual Phase"; emoji = "🔴"; }
+  else if (day <= follEnd) { phase = "follicular"; phaseName = "Follicular Phase";  emoji = "🌱"; }
+  else if (day <= ovEnd)   { phase = "ovulation";  phaseName = "Ovulation Phase";   emoji = "✨"; }
+  else                     { phase = "luteal";     phaseName = "Luteal Phase";      emoji = "🌙"; }
+
+  cycleInfo = { day, phase, phaseName, emoji, len, phases };
+
+  // update all home page elements too
+  const homeDay   = document.getElementById("t-day");
+  const homePhase = document.getElementById("t-phase");
+  const homeIco   = document.getElementById("t-phase-ico");
+  if (homeDay)   homeDay.textContent   = `Day ${day}`;
+  if (homePhase) homePhase.textContent = phaseName.split(" ")[0];
+  if (homeIco)   homeIco.textContent   = emoji;
+
+  // phase page
+  if (document.getElementById("pov-day")) {
+    document.getElementById("pov-day").textContent       = `Day ${day}`;
+    document.getElementById("pov-phase").textContent     = phaseName;
+    document.getElementById("pov-emoji").textContent     = emoji;
+    document.getElementById("pov-cycle-len").textContent = `${len} day cycle`;
+
+    // days until next period
+    const daysLeft = len - day;
+    document.getElementById("pov-next").textContent = daysLeft === 0 ? "period may start today" : `next period in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`;
+
+    // phase progress bar
+    const pct = Math.min((day / len) * 100, 100);
+    document.getElementById("phase-bar").style.width = `${pct}%`;
+
+    // ovulation window
+    const ovStart = follEnd + 1;
+    const ovE     = ovEnd;
+    if (day < ovStart)      document.getElementById("ov-window").textContent = `Day ${ovStart}–${ovE} (in ${ovStart - day}d)`;
+    else if (day <= ovE)    document.getElementById("ov-window").textContent = `Now (Day ${day}) 🥚`;
+    else                    document.getElementById("ov-window").textContent = `Day ${ovStart}–${ovE} (next cycle)`;
+
+    // next period date
+    const nextDate = new Date(start);
+    nextDate.setDate(nextDate.getDate() + diff + daysLeft);
+    document.getElementById("next-period-date").textContent = nextDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  }
+
+  // also sync cycle diary tab
+  const pcDay   = document.getElementById("pc-day");
+  const pcPhase = document.getElementById("pc-phase");
+  const pcEmoji = document.getElementById("pc-emoji");
+  if (pcDay)   pcDay.textContent   = `Day ${day}`;
+  if (pcPhase) pcPhase.textContent = phaseName;
+  if (pcEmoji) pcEmoji.textContent = emoji;
+}
+
+window.loadForecast = async (btn, type) => {
+  document.querySelectorAll(".fc-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  const box = document.getElementById("forecast-box");
+  box.textContent = "Chinatsu is thinking... 🌿";
+  const tips = {
+    mood:      `What mood and emotional changes should ${uData.name || "she"} expect in the ${cycleInfo.phaseName || "current"} phase? Be specific, warm, and validating. 2-3 sentences.`,
+    energy:    `What energy levels are typical in the ${cycleInfo.phaseName || "current"} phase and how should ${uData.name || "she"} work with them, not against them? 2-3 sentences.`,
+    nutrition: `What foods and nutrients are most supportive for the ${cycleInfo.phaseName || "current"} phase? Be specific and practical — mention actual foods, not just nutrients. 3-4 sentences.`,
+    skin:      `How does the ${cycleInfo.phaseName || "current"} phase affect skin and what skincare adjustments should ${uData.name || "she"} make? She loves skincare. Be specific. 2-3 sentences.`,
+    exercise:  `What types of movement and exercise work best with the body during the ${cycleInfo.phaseName || "current"} phase? Be specific and encouraging. 2-3 sentences.`
+  };
+  try {
+    const res = await groq(`${tips[type] || tips.mood} Speak as Chinatsu, a warm knowledgeable cycle mentor. No bullet points. Conversational.`, 0.8, 220, MODEL_VENT);
+    box.textContent = res;
+  } catch { box.textContent = "couldn't load tips right now — try again in a moment 🌿"; }
+};
+
+window.loadChiTip = async () => {
+  const el = document.getElementById("chi-tip-txt");
+  if (!el) return;
+  el.textContent = "loading...";
+  try {
+    const tip = await groq(`Give one specific, useful wellness tip for someone in the ${cycleInfo.phaseName || "luteal"} phase (Day ${cycleInfo.day || "?"} of their cycle). Could be about sleep, food, skincare, movement, mindset — whatever is most relevant to this phase. 1-2 sentences. Warm and practical. Start directly with the tip, no preamble.`, 0.85, 120, MODEL_VENT);
+    el.textContent = tip;
+  } catch { el.textContent = "Stay hydrated and be gentle with yourself today 🌿"; }
+};
+
+window.toggleCust = () => {
+  const body  = document.getElementById("cust-body");
+  const arrow = document.getElementById("cust-arrow");
+  const open  = body.style.display === "none";
+  body.style.display = open ? "block" : "none";
+  arrow.classList.toggle("open", open);
+  if (open) {
+    const p = uData.phases || { mens: 5, foll: 8, ov: 3 };
+    document.getElementById("cust-len").value  = uData.cycleLength || 28;
+    document.getElementById("cust-mens").value = p.mens || 5;
+    document.getElementById("cust-foll").value = p.foll || 8;
+    document.getElementById("cust-ov").value   = p.ov   || 3;
+  }
+};
+
+window.saveCycleCustom = async () => {
+  const len  = parseInt(document.getElementById("cust-len").value)  || 28;
+  const mens = parseInt(document.getElementById("cust-mens").value) || 5;
+  const foll = parseInt(document.getElementById("cust-foll").value) || 8;
+  const ov   = parseInt(document.getElementById("cust-ov").value)   || 3;
+  const lut  = len - mens - foll - ov;
+  if (lut < 1) { toast("phases add up to more than your cycle length 😅"); return; }
+  uData.cycleLength = len;
+  uData.phases      = { mens, foll, ov, lut };
+  await setDoc(doc(db, "users", user.uid), uData, { merge: true });
+  computeCycleFull();
+  document.getElementById("cust-auto-msg").textContent = `✓ saved — Luteal phase = ${lut} days`;
+  toast("cycle updated 🌸");
+
+  // auto-detect message
+  if (len < 25) {
+    document.getElementById("cust-auto-msg").textContent = `✓ saved — shorter cycle (${len} days) is completely normal 🌸`;
+  }
+};
+
+async function loadSymHistory() {
+  const wrap = document.getElementById("sym-history");
+  if (!wrap) return;
+  try {
+    const snap = await getDocs(query(collection(db, "cycle", user.uid, "symptoms"), orderBy("ts","desc"), limit(10)));
+    if (snap.empty) { wrap.innerHTML = '<p class="empty">log symptoms in your diary to see patterns here 🌸</p>'; return; }
+    wrap.innerHTML = "";
+    snap.forEach(d => {
+      const data = d.data();
+      const el   = document.createElement("div");
+      el.className = "sh-item";
+      const dt = new Date(data.ts).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      el.innerHTML = `<div class="sh-date">${dt}</div><div class="sh-syms">${(data.symptoms || []).map(s => `<span class="sh-sym">${s}</span>`).join("")}</div>`;
+      wrap.appendChild(el);
+    });
+  } catch { wrap.innerHTML = '<p class="empty">couldn\'t load history 😭</p>'; }
+}
+
+// ─────────────────────────────────────────────
+// PATCH navTo to handle period page + init cycle
+// ─────────────────────────────────────────────
+const _origNavTo = window.navTo;
+window.navTo = (page, navEl) => {
+  const wipe = document.getElementById("wipe");
+  wipe.classList.add("on");
+  setTimeout(() => {
+    document.querySelectorAll(".pg").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".ni").forEach(n => n.classList.remove("active"));
+    document.getElementById(`pg-${page}`).classList.add("active");
+    if (navEl) navEl.classList.add("active");
+    if (page === "cycle")   { computeCycleFull(); renderCal(); if(document.getElementById("phase-msg-txt")) loadPhaseMsg(); }
+    if (page === "period")  { setupPeriodPage(); }
+    if (page === "history") loadHistory();
+    if (page === "profile") setupProfile();
+    wipe.classList.remove("on");
+    const msgs = {
+      home:    ["welcome back 🌸", "hey gorgeous ✨"],
+      epipen:  ["say anything 💉", "I'm here 🌸"],
+      cycle:   ["your diary 🌙", "private forever 🌸"],
+      period:  ["Chinatsu is here 🌿", "your body, understood 🩸"],
+      comfort: ["soft landing 🌸", "take a breath ✨"],
+      history: ["look how far you've come 🌸"],
+      profile: ["main character behaviour 🌸"]
+    };
+    const m = msgs[page];
+    if (m) showPop(m[Math.floor(Math.random() * m.length)]);
+  }, 180);
+};
+
+// also make tile on home go to period page correctly
+document.addEventListener("DOMContentLoaded", () => {
+  const tile = document.getElementById("t-day");
+  if (tile) tile.closest(".tile")?.setAttribute("onclick", "navTo('period',document.querySelector('.ni:nth-child(4)'))");
+});

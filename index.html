@@ -272,6 +272,108 @@
         </div>
       </div>
 
+
+      <!-- PERIOD / CYCLE TRACKER -->
+      <div id="pg-period" class="pg">
+        <div class="pg-hd">
+          <h2 class="pg-title">cycle space 🩸</h2>
+          <p class="pg-sub">your body, understood</p>
+        </div>
+
+        <div class="chinatsu-card">
+          <div class="chi-av-wrap">
+            <div class="chi-av">🌿</div>
+            <div class="chi-halo"></div>
+          </div>
+          <div class="chi-info">
+            <p class="chi-name">Chinatsu</p>
+            <p class="chi-sub">your cycle mentor · always learning you</p>
+          </div>
+          <button class="chi-chat-btn" onclick="toggleChiChat()">chat 💬</button>
+        </div>
+
+        <div id="chi-chat" class="chi-chat" style="display:none">
+          <div id="chi-msgs" class="chi-msgs"></div>
+          <div class="chi-input-row">
+            <input id="chi-in" class="mc-in" placeholder="ask Chinatsu anything about your cycle..." type="text"/>
+            <button class="mc-send" onclick="sendChi()">→</button>
+          </div>
+        </div>
+
+        <div class="phase-overview-card">
+          <div class="pov-top">
+            <div>
+              <div class="pov-day" id="pov-day">Day —</div>
+              <div class="pov-phase" id="pov-phase">—</div>
+              <div class="pov-next" id="pov-next">calculating...</div>
+            </div>
+            <div class="pov-right">
+              <div class="pov-emoji" id="pov-emoji">🌸</div>
+              <div class="pov-cycle-len" id="pov-cycle-len">— day cycle</div>
+            </div>
+          </div>
+          <div class="phase-bar-wrap">
+            <div class="phase-bar" id="phase-bar" style="width:0%"></div>
+          </div>
+          <div class="phase-bar-labels">
+            <span>Womenstrual</span><span>Follicular</span><span>Ovulation</span><span>Luteal</span>
+          </div>
+        </div>
+
+        <div class="glass-row">
+          <div class="ov-left">
+            <p class="ov-label">🥚 Ovulation Window</p>
+            <p class="ov-val" id="ov-window">calculating...</p>
+          </div>
+          <div class="ov-right">
+            <p class="ov-label">📅 Next Period</p>
+            <p class="ov-val" id="next-period-date">calculating...</p>
+          </div>
+        </div>
+
+        <div class="forecast-tabs">
+          <button class="fc-tab active" onclick="loadForecast(this,'mood')">😊 Mood</button>
+          <button class="fc-tab" onclick="loadForecast(this,'energy')">⚡ Energy</button>
+          <button class="fc-tab" onclick="loadForecast(this,'nutrition')">🥗 Eat</button>
+          <button class="fc-tab" onclick="loadForecast(this,'skin')">💅 Skin</button>
+          <button class="fc-tab" onclick="loadForecast(this,'exercise')">🏃 Move</button>
+        </div>
+        <div id="forecast-box" class="forecast-box">tap a tab for Chinatsu's tips 🌿</div>
+
+        <div class="cust-card">
+          <div class="cust-hd" onclick="toggleCust()">
+            <p class="cust-title">⚙️ Customise Your Cycle</p>
+            <span id="cust-arrow">›</span>
+          </div>
+          <div id="cust-body" class="cust-body" style="display:none">
+            <label class="field-lbl">Avg Cycle Length (days)</label>
+            <input id="cust-len" class="b-input" type="number" min="13" max="50" placeholder="e.g. 28"/>
+            <label class="field-lbl">Womenstrual phase length (days)</label>
+            <input id="cust-mens" class="b-input" type="number" min="1" max="10" placeholder="e.g. 5"/>
+            <label class="field-lbl">Follicular phase length (days)</label>
+            <input id="cust-foll" class="b-input" type="number" min="1" max="20" placeholder="e.g. 8"/>
+            <label class="field-lbl">Ovulation window (days)</label>
+            <input id="cust-ov" class="b-input" type="number" min="1" max="6" placeholder="e.g. 3"/>
+            <p class="cust-hint">Luteal fills the rest automatically 🌙</p>
+            <button class="b-btn" onclick="saveCycleCustom()">Save My Cycle 🌸</button>
+            <p class="cust-auto" id="cust-auto-msg"></p>
+          </div>
+        </div>
+
+        <p class="sec-lbl">symptom history</p>
+        <div id="sym-history" class="sym-history">
+          <p class="empty">log symptoms in your diary to see patterns here 🌸</p>
+        </div>
+
+        <div class="chi-tip-card">
+          <div class="chi-tip-hd">
+            <span>🌿 Chinatsu's tip for today</span>
+            <button class="ref-btn" onclick="loadChiTip()">↻</button>
+          </div>
+          <p id="chi-tip-txt" class="chi-tip-txt">loading your daily tip...</p>
+        </div>
+      </div>
+
       <!-- COMFORT -->
       <div id="pg-comfort" class="pg">
         <div class="pg-hd">
@@ -386,6 +488,7 @@
       <div class="ni active" onclick="navTo('home',this)"><span class="ni-ico">🏠</span><span class="ni-lbl">Home</span></div>
       <div class="ni" onclick="navTo('epipen',this)"><span class="ni-ico" id="nav-epi-ico">💉</span><span class="ni-lbl">Epipen</span></div>
       <div class="ni" onclick="navTo('cycle',this)"><span class="ni-ico">🌙</span><span class="ni-lbl">Diary</span></div>
+      <div class="ni" onclick="navTo('period',this)"><span class="ni-ico">🩸</span><span class="ni-lbl">Cycle</span></div>
       <div class="ni" onclick="navTo('comfort',this)"><span class="ni-ico">🌸</span><span class="ni-lbl">Comfort</span></div>
       <div class="ni" onclick="navTo('profile',this)"><span class="ni-ico">👤</span><span class="ni-lbl">Profile</span></div>
     </nav>
