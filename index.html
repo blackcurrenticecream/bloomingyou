@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Bloom 🌸</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="petals"></div>
+<div id="wipe" class="wipe"></div>
+
+<!-- AUTH -->
+<div id="s-auth" class="screen active">
+  <div class="auth-wrap">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="auth-inner">
+      <div class="auth-flower">
+        <div class="af-ring r1"></div>
+        <div class="af-ring r2"></div>
+        <div class="af-ring r3"></div>
+        <span class="af-core">🌸</span>
+      </div>
+      <h1 class="auth-logo">bloom</h1>
+      <p class="auth-tag">you bloom with dignity</p>
+      <div class="auth-card">
+        <p class="auth-desc">your space. your chaos. held softly.</p>
+        <button id="btn-google" class="g-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+          Continue with Google
+        </button>
+        <p class="unravel">Bloom · Unravel Labs</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARD -->
+<div id="s-onboard" class="screen">
+  <div class="ob-wrap">
+    <div class="ob-card">
+      <div id="ob1" class="ob-step active">
+        <div class="ob-icon">👋</div>
+        <span class="chip">hey gorgeous</span>
+        <h2 class="ob-title">What's your name?</h2>
+        <p class="ob-hint">I want to know who I'm taking care of 💉</p>
+        <input id="ob-name" class="b-input" type="text" placeholder="your name..." maxlength="30"/>
+        <button class="b-btn" onclick="obNext(1)">Next →</button>
+      </div>
+      <div id="ob2" class="ob-step">
+        <div class="ob-icon">🌙</div>
+        <span class="chip">almost there</span>
+        <h2 class="ob-title">Last period start?</h2>
+        <p class="ob-hint">For your Womenstrual cycle. Zero judgment. 🌸</p>
+        <input id="ob-cycle" class="b-input" type="date"/>
+        <button class="b-btn" onclick="obNext(2)">Let's go 🌸</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="s-app" class="screen">
+  <div class="shell">
+
+    <header class="topbar">
+      <div class="tb-brand">
+        <span class="tb-logo">bloom</span>
+        <span class="tb-bloom">🌸</span>
+      </div>
+      <div id="av-wrap" onclick="navTo('profile',document.querySelector('.ni:last-child'))"></div>
+    </header>
+
+    <div class="pages">
+
+      <!-- HOME -->
+      <div id="pg-home" class="pg active">
+
+        <!-- mood gate -->
+        <div id="mood-gate" class="overlay">
+          <div class="gate-card">
+            <button class="gate-x" onclick="closeGate()">✕</button>
+            <p class="gate-chip">daily check-in 🌸</p>
+            <h3 class="gate-title">how are you feeling?</h3>
+            <div class="meter">
+              <div class="meter-emoji" id="m-emoji">🌸</div>
+              <input type="range" id="m-slider" class="m-slider" min="1" max="10" step="0.1" value="5" oninput="onMeter(this.value)"/>
+              <div class="meter-nums">
+                <span>1</span>
+                <span class="meter-val"><span id="m-val">5.0</span><small>/10</small></span>
+                <span>10</span>
+              </div>
+            </div>
+            <button class="b-btn" onclick="submitMood()">done 🌸</button>
+          </div>
+        </div>
+
+        <!-- mood response -->
+        <div id="mood-pop" class="mood-pop" style="display:none">
+          <button class="mpop-x" onclick="this.parentElement.style.display='none'">✕</button>
+          <p id="mood-pop-txt" class="mpop-txt"></p>
+        </div>
+
+        <div class="greeting">
+          <p class="gr-time" id="gr-time">good morning</p>
+          <h2 class="gr-name">hey <span id="gr-name">bestie</span> ✦</h2>
+        </div>
+
+        <div class="quote-card" id="quote-card">
+          <button class="q-refresh" onclick="fetchQuote()">↻</button>
+          <p class="q-text" id="q-text">loading something for you...</p>
+        </div>
+
+        <div class="home-tiles">
+          <div class="tile t-mood" onclick="openGate()">
+            <div class="tile-ico" id="t-mood-ico">🌸</div>
+            <div class="tile-lbl">vibe check</div>
+            <div class="tile-sub">tap to log</div>
+          </div>
+          <div class="tile t-cycle" onclick="navTo('cycle',document.querySelector('.ni:nth-child(3)'))">
+            <div class="tile-ico" id="t-phase-ico">🌙</div>
+            <div class="tile-lbl" id="t-day">Day —</div>
+            <div class="tile-sub" id="t-phase">your cycle</div>
+          </div>
+        </div>
+
+        <button class="epi-pill" id="epi-pill" onclick="toggleMini()">
+          <span id="epi-pill-ico">💉</span>
+          <span id="epi-pill-name">Epipen</span>
+          <span class="epi-pill-pulse"></span>
+        </button>
+
+        <div id="mini-chat" class="mini-chat" style="display:none">
+          <div class="mc-bar">
+            <span><span id="mc-name-lbl">💉 Epipen</span></span>
+            <button onclick="toggleMini()" class="mc-x">✕</button>
+          </div>
+          <div id="mc-msgs" class="mc-msgs"></div>
+          <div class="mc-row">
+            <input id="mc-in" class="mc-in" type="text" placeholder="say anything..."/>
+            <button class="mc-send" onclick="sendMini()">→</button>
+          </div>
+        </div>
+
+        <div id="compliment" class="compliment-bar" style="display:none">
+          <span id="compliment-txt"></span>
+          <button onclick="this.parentElement.style.display='none'" class="bar-x">✕</button>
+        </div>
+
+      </div>
+
+      <!-- EPIPEN -->
+      <div id="pg-epipen" class="pg">
+        <div class="epi-hdr">
+          <div class="epi-av-wrap">
+            <div class="epi-av" id="epi-av">💉</div>
+            <div class="epi-halo"></div>
+          </div>
+          <div class="epi-hdr-info">
+            <h2 id="epi-nm" class="epi-nm">Epipen</h2>
+            <p class="epi-sub">always here. zero filter.</p>
+          </div>
+          <button class="rename-btn" onclick="renameEpi()">✏️</button>
+        </div>
+
+        <div class="mode-row">
+          <button class="mode-btn active" data-mode="vent" onclick="setMode(this,'vent')">🌿 Vent</button>
+          <button class="mode-btn" data-mode="argue" onclick="setMode(this,'argue')">👊 Argue</button>
+          <button class="mode-btn mode-fire" data-mode="argue-nsfw" onclick="setMode(this,'argue-nsfw')">🔥 Argue+</button>
+          <button class="mode-btn" data-mode="anger" onclick="setMode(this,'anger')">💥 Release</button>
+        </div>
+
+        <div id="chat-msgs" class="chat-msgs">
+          <div class="msg epi-msg">hey. what's going on? 🌸</div>
+        </div>
+
+        <div class="chat-bar">
+          <textarea id="chat-in" class="chat-in" placeholder="say anything..." rows="2"></textarea>
+          <button class="chat-send" onclick="sendMsg()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- CYCLE/DIARY -->
+      <div id="pg-cycle" class="pg">
+        <div class="pg-hd">
+          <h2 class="pg-title">your space 🌙</h2>
+          <p class="pg-sub">cycle · diary · private forever</p>
+        </div>
+
+        <div class="phase-card">
+          <div class="pc-left">
+            <div class="pc-day" id="pc-day">Day —</div>
+            <div class="pc-phase" id="pc-phase">loading...</div>
+          </div>
+          <div class="pc-emoji" id="pc-emoji">🌸</div>
+        </div>
+
+        <div class="phase-msg" id="phase-msg">
+          <p id="phase-msg-txt">generating your message...</p>
+          <button class="ref-btn" onclick="loadPhaseMsg()">↻</button>
+        </div>
+
+        <div class="sum-tabs">
+          <button class="sum-tab active" onclick="loadSum(this,'today')">Today</button>
+          <button class="sum-tab" onclick="loadSum(this,'week')">Week</button>
+          <button class="sum-tab" onclick="loadSum(this,'month')">Month</button>
+        </div>
+        <div id="sum-box" class="sum-box">tap a tab for your summary 🌸</div>
+
+        <div class="cal-wrap">
+          <div class="cal-hd">
+            <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+            <span class="cal-ttl" id="cal-ttl"></span>
+            <button class="cal-nav" onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-dow">
+            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-legend">
+            <span class="leg p-leg"></span><span>period</span>
+            <span class="leg d-leg"></span><span>diary</span>
+            <span class="leg td-leg"></span><span>today</span>
+          </div>
+          <div class="cal-actions">
+            <button class="ca-btn" onclick="setRange('start')">🔴 Start</button>
+            <button class="ca-btn" onclick="setRange('end')">🟢 End</button>
+            <button class="ca-btn" onclick="clearRange()">✕ Clear</button>
+          </div>
+          <p class="cal-hint" id="cal-hint">tap a date to open your diary 🌸</p>
+        </div>
+
+        <p class="sec-lbl">how's your body today?</p>
+        <div class="sym-wrap">
+          <button class="sym" onclick="toggleSym(this)">cramps from hell 🔥</button>
+          <button class="sym" onclick="toggleSym(this)">bloated queen 👑</button>
+          <button class="sym" onclick="toggleSym(this)">emotional wreck 🌊</button>
+          <button class="sym" onclick="toggleSym(this)">headache szn 💀</button>
+          <button class="sym" onclick="toggleSym(this)">tired but thriving 😮‍💨</button>
+          <button class="sym" onclick="toggleSym(this)">mood swings 🔄</button>
+          <button class="sym" onclick="toggleSym(this)">actually fine ✨</button>
+          <button class="sym" onclick="toggleSym(this)">back pain 😭</button>
+          <button class="sym" onclick="toggleSym(this)">chaos appetite 🍫</button>
+          <button class="sym" onclick="toggleSym(this)">skin drama 💅</button>
+        </div>
+        <button class="b-btn sm-btn" onclick="saveSyms()">save today 🌸</button>
+      </div>
+
+      <!-- diary modal -->
+      <div id="diary-modal" class="d-overlay" style="display:none">
+        <div class="d-card">
+          <div class="d-hd">
+            <h3 id="d-date" class="d-date"></h3>
+            <button onclick="closeDiary()" class="d-x">✕</button>
+          </div>
+          <textarea id="d-in" class="d-in" placeholder="write anything — your thoughts, feelings, what happened, how your body feels. yours forever. 🌸"></textarea>
+          <button class="b-btn" onclick="saveDiary()" style="margin-bottom:.75rem">save 🌸</button>
+          <div id="d-past" class="d-section" style="display:none">
+            <p class="d-slbl">📖 your entry</p>
+            <p id="d-past-txt" class="d-txt"></p>
+          </div>
+          <div id="d-ai" class="d-section" style="display:none">
+            <p class="d-slbl">💉 epipen responded</p>
+            <p id="d-ai-txt" class="d-txt"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMFORT -->
+      <div id="pg-comfort" class="pg">
+        <div class="pg-hd">
+          <h2 class="pg-title">comfort corner 🌸</h2>
+          <p class="pg-sub">land here softly whenever</p>
+        </div>
+        <div class="gem-grid">
+          <div class="gem gm-pink" onclick="openComfort('meme')"><div class="gm-ico">😭</div><div class="gm-nm">Meme Therapy</div><div class="gm-sub">mood-based chaos</div></div>
+          <div class="gem gm-gold" onclick="openComfort('glow')"><div class="gm-ico">💅</div><div class="gm-nm">Baddie Glow Up</div><div class="gm-sub">your skin your rules</div></div>
+          <div class="gem gm-teal" onclick="openComfort('dream')"><div class="gm-ico">🌠</div><div class="gm-nm">Dream Fuel</div><div class="gm-sub">slay queen energy</div></div>
+          <div class="gem gm-rose" onclick="openComfort('surprise')"><div class="gm-ico">💉</div><div class="gm-nm">Epipen Surprise</div><div class="gm-sub">he has something</div></div>
+        </div>
+
+        <div id="glow-setup" class="setup-card" style="display:none">
+          <h3 class="setup-ttl">💅 Baddie Glow Up Centre</h3>
+          <p class="setup-hint">describe your skin — be specific. I'll build an actual routine, not generic stuff.</p>
+          <textarea id="skin-in" class="d-in" placeholder="oily, acne-prone, want glass skin, dark spots..."></textarea>
+          <button class="b-btn" onclick="genGlow()">Build My Routine ✨</button>
+        </div>
+
+        <div id="dream-setup" class="setup-card" style="display:none">
+          <h3 class="setup-ttl">🌠 Dream Fuel</h3>
+          <p class="setup-hint">what kind of woman do you aspire to be?</p>
+          <textarea id="dream-in" class="d-in" placeholder="baddie with abs, travelling the world, financially independent, music obsessed..."></textarea>
+          <button class="b-btn" onclick="genDream()">Fuel Me 🔥</button>
+        </div>
+
+        <div id="comfort-out" class="comfort-out" style="display:none">
+          <div id="comfort-txt"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div id="pg-history" class="pg">
+        <div class="pg-hd">
+          <h2 class="pg-title">your journey 📖</h2>
+          <p class="pg-sub">everything you've survived</p>
+        </div>
+        <div id="history-list" class="history-list">
+          <p class="empty">your story starts the moment you open up 🌸</p>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="pg-profile" class="pg">
+        <div class="prof-hdr">
+          <div id="prof-av" class="prof-av"></div>
+          <div class="prof-info">
+            <h2 id="prof-nm" class="prof-nm">—</h2>
+            <p id="prof-email" class="prof-email">—</p>
+          </div>
+          <div class="easter-egg">made with 🌸 for someone special</div>
+        </div>
+
+        <div class="prof-sections">
+          <div class="prof-sec">
+            <p class="prof-sec-ttl">✏️ your details</p>
+            <label class="field-lbl">Display Name</label>
+            <input id="edit-nm" class="b-input" type="text"/>
+            <label class="field-lbl">Cycle Start Date</label>
+            <input id="edit-cycle" class="b-input" type="date"/>
+            <label class="field-lbl">Cycle Length (days)</label>
+            <input id="edit-len" class="b-input" type="number" min="21" max="45" placeholder="28"/>
+            <button class="b-btn" onclick="saveProf()">Save 🌸</button>
+          </div>
+
+          <div class="prof-sec">
+            <p class="prof-sec-ttl">💉 Epipen emoji</p>
+            <div class="emoji-picker" id="emoji-picker">
+              <button class="ep-opt active" onclick="setEpiEmoji(this,'💉')">💉</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'🌸')">🌸</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'⚡')">⚡</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'🔥')">🔥</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'🤍')">🤍</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'✨')">✨</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'🎸')">🎸</button>
+              <button class="ep-opt" onclick="setEpiEmoji(this,'👑')">👑</button>
+            </div>
+          </div>
+
+          <div class="prof-sec">
+            <p class="prof-sec-ttl">🎨 theme</p>
+            <div class="theme-grid">
+              <div class="th active" data-theme="rose-gold" onclick="setTheme(this,'rose-gold')" style="background:linear-gradient(135deg,#c0392b,#f39c12)"><span>🌹 Rose Gold</span></div>
+              <div class="th" data-theme="pink" onclick="setTheme(this,'pink')" style="background:linear-gradient(135deg,#e8649a,#c89ee0)"><span>🌸 Pink</span></div>
+              <div class="th" data-theme="lavender" onclick="setTheme(this,'lavender')" style="background:linear-gradient(135deg,#9b6fd4,#7ecdc0)"><span>💜 Lavender</span></div>
+              <div class="th" data-theme="midnight" onclick="setTheme(this,'midnight')" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"><span>🌌 Midnight</span></div>
+              <div class="th" data-theme="forest" onclick="setTheme(this,'forest')" style="background:linear-gradient(135deg,#134e5e,#71b280)"><span>🌿 Forest</span></div>
+              <div class="th" data-theme="cherry" onclick="setTheme(this,'cherry')" style="background:linear-gradient(135deg,#eb3349,#f45c43)"><span>🍒 Cherry</span></div>
+            </div>
+          </div>
+
+          <div class="prof-sec">
+            <p class="prof-sec-ttl">⚙️ settings</p>
+            <div class="setting-row">
+              <span class="s-lbl">Daily mood check-in</span>
+              <label class="toggle"><input type="checkbox" id="tog-checkin" checked onchange="saveSetting('checkin',this.checked)"/><span class="tog-track"></span></label>
+            </div>
+            <div class="setting-row">
+              <span class="s-lbl">Random compliments</span>
+              <label class="toggle"><input type="checkbox" id="tog-compliments" checked onchange="saveSetting('compliments',this.checked)"/><span class="tog-track"></span></label>
+            </div>
+          </div>
+
+          <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+        </div>
+      </div>
+
+    </div><!-- /pages -->
+
+    <nav class="nav">
+      <div class="ni active" onclick="navTo('home',this)"><span class="ni-ico">🏠</span><span class="ni-lbl">Home</span></div>
+      <div class="ni" onclick="navTo('epipen',this)"><span class="ni-ico" id="nav-epi-ico">💉</span><span class="ni-lbl">Epipen</span></div>
+      <div class="ni" onclick="navTo('cycle',this)"><span class="ni-ico">🌙</span><span class="ni-lbl">Diary</span></div>
+      <div class="ni" onclick="navTo('comfort',this)"><span class="ni-ico">🌸</span><span class="ni-lbl">Comfort</span></div>
+      <div class="ni" onclick="navTo('profile',this)"><span class="ni-ico">👤</span><span class="ni-lbl">Profile</span></div>
+    </nav>
+
+  </div>
+</div>
+
+<!-- page popup -->
+<div id="pg-pop" class="pg-pop" style="display:none"><span id="pg-pop-txt"></span></div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
