@@ -18,7 +18,7 @@ const firebaseConfig = {
   measurementId: "G-6ZBRZ2X4CD"
 };
 
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "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";
 const MODEL = "llama-3.3-70b-versatile"
 
 // ─────────────────────────────────────────────
